@@ -3,14 +3,19 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"netdisk/handler"
+	"netdisk/meta"
 )
 
 func main() {
-	http.HandleFunc("/file/upload", handler.UploadHandler)
-	http.HandleFunc("/file/upload/suc", handler.UploadSucPage)
+	initial()
+
 	err := http.ListenAndServe(":8081", nil)
 	if err != nil {
 		panic(fmt.Sprint("server start err: %v", err))
 	}
+}
+
+func initial() {
+	meta.InitFileMetas()
+	initHandler()
 }

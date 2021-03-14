@@ -1,11 +1,15 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"netdisk/meta"
+	"netdisk/utils"
 	"os"
+	"time"
 )
 
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
@@ -33,18 +37,32 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		newFile, err := os.Create(fmt.Sprintf("./tmp/%v", header.Filename))
+		location := fmt.Sprintf("./tmp/%v", header.Filename)
+		newFile, err := os.Create(location)
 		if err != nil {
 			io.WriteString(w, fmt.Sprintf("create new file fail, err: %v", err))
 			return
 		}
 		defer newFile.Close()
 
-		_, err = io.Copy(newFile, file)
+		size, err := io.Copy(newFile, file)
 		if err != nil {
 			io.WriteString(w, fmt.Sprintf("copy file fail, err: %v", err))
 			return
 		}
+
+		// 更新文件meta信息
+		newFile.Seek(0, 0)
+		fileMeta := meta.FileMeta{
+			FileSha1: utils.FileSha1(newFile),
+			FileName: header.Filename,
+			FileSize: size,
+			Location: location,
+			UploadAt: time.Now(),
+		}
+		meta.UpdateFileMetas(fileMeta)
+
+		fmt.Println(fileMeta.FileSha1)
 
 		// 重定向到上传成功页面
 		http.Redirect(w, r, "/file/upload/suc", http.StatusFound)
@@ -53,4 +71,18 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 func UploadSucPage(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "upload success...")
+}
+
+func GetFileMeta(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	filePath := r.Form.Get("file_hash")
+	fileMeta := meta.GetFileMeta(filePath)
+	data, err := json.Marshal(fileMeta)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Write(data)
+
+	fmt.Println(string(data))
 }
