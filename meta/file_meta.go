@@ -23,6 +23,7 @@ func UpdateFileMetas(meta FileMeta) {
 }
 
 // 获取文件元信息
-func GetFileMeta(fileSha1 string) FileMeta {
-	return fileMetas[fileSha1]
+func GetFileMeta(fileSha1 string) (FileMeta, bool) {
+	fileMeta, ok := fileMetas[fileSha1]
+	return fileMeta, ok
 }

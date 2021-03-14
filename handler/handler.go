@@ -76,7 +76,12 @@ func UploadSucPage(w http.ResponseWriter, r *http.Request) {
 func GetFileMeta(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	filePath := r.Form.Get("file_hash")
-	fileMeta := meta.GetFileMeta(filePath)
+	fileMeta, ok := meta.GetFileMeta(filePath)
+	if !ok {
+		// todo 处理not found
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	data, err := json.Marshal(fileMeta)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -85,4 +90,33 @@ func GetFileMeta(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 
 	fmt.Println(string(data))
+}
+
+func DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	filePath := r.Form.Get("file_hash")
+	fileMeta, ok := meta.GetFileMeta(filePath)
+	if !ok {
+		// todo 处理not found
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	// todo 确定权限常量
+	file, err := os.Open(fileMeta.Location)
+	if err != nil {
+		io.WriteString(w, fmt.Sprintf("open file fail, err: %v", err))
+		return
+	}
+	defer file.Close()
+
+	// todo 文件比较大的话，需要做分批读入
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		io.WriteString(w, fmt.Sprintf("read file fail, err: %v", err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/x-msdownload;charset=utf-8")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;filename=%v", fileMeta.FileName))
+	w.Write(data)
 }
