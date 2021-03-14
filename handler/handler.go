@@ -120,3 +120,23 @@ func DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;filename=%v", fileMeta.FileName))
 	w.Write(data)
 }
+
+// todo 校验post请求方法
+func DeleteFileHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	filePath := r.Form.Get("file_hash")
+	fileMeta, ok := meta.GetFileMeta(filePath)
+	if !ok {
+		// todo 处理not found
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	meta.DelFileMeta(fileMeta.FileSha1)
+	err := os.Remove(fileMeta.Location)
+	if err != nil {
+		io.WriteString(w, fmt.Sprintf("delete file fail, err: %v", err))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}

@@ -27,3 +27,8 @@ func GetFileMeta(fileSha1 string) (FileMeta, bool) {
 	fileMeta, ok := fileMetas[fileSha1]
 	return fileMeta, ok
 }
+
+// 删除某个文件元信息
+func DelFileMeta(fileSha1 string) {
+	delete(fileMetas, fileSha1)
+}
