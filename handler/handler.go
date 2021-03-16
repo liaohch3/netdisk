@@ -6,10 +6,10 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"netdisk/meta"
+	"netdisk/entity"
+	"netdisk/model"
 	"netdisk/utils"
 	"os"
-	"time"
 )
 
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
@@ -53,16 +53,14 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		// 更新文件meta信息
 		newFile.Seek(0, 0)
-		fileMeta := meta.FileMeta{
-			FileSha1: utils.FileSha1(newFile),
-			FileName: header.Filename,
-			FileSize: size,
-			Location: location,
-			UploadAt: time.Now(),
+		sha1 := utils.FileSha1(newFile)
+		err = model.CreateFileMeta(sha1, header.Filename, size, location)
+		if err != nil {
+			io.WriteString(w, fmt.Sprintf("CreateFileMeta fail, err: %v", err))
+			// todo 这里失败最好可以起一个协程删掉文件
+			return
 		}
-		meta.UpdateFileMetas(fileMeta)
-
-		fmt.Println(fileMeta.FileSha1)
+		fmt.Println(sha1)
 
 		// 重定向到上传成功页面
 		http.Redirect(w, r, "/file/upload/suc", http.StatusFound)
@@ -76,10 +74,11 @@ func UploadSucPage(w http.ResponseWriter, r *http.Request) {
 func GetFileMeta(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	filePath := r.Form.Get("file_hash")
-	fileMeta, ok := meta.GetFileMeta(filePath)
-	if !ok {
+	fileMeta, err := entity.GetFileMetaBySha1(filePath)
+	if err != nil {
 		// todo 处理not found
 		w.WriteHeader(http.StatusInternalServerError)
+		io.WriteString(w, fmt.Sprintf("GetFileMetaBySha1 fail, err: %v", err))
 		return
 	}
 	data, err := json.Marshal(fileMeta)
@@ -95,10 +94,11 @@ func GetFileMeta(w http.ResponseWriter, r *http.Request) {
 func DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	filePath := r.Form.Get("file_hash")
-	fileMeta, ok := meta.GetFileMeta(filePath)
-	if !ok {
+	fileMeta, err := entity.GetFileMetaBySha1(filePath)
+	if err != nil {
 		// todo 处理not found
 		w.WriteHeader(http.StatusInternalServerError)
+		io.WriteString(w, fmt.Sprintf("GetFileMetaBySha1 fail, err: %v", err))
 		return
 	}
 	// todo 确定权限常量
@@ -117,7 +117,7 @@ func DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/x-msdownload;charset=utf-8")
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;filename=%v", fileMeta.FileName))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;filename=%v", fileMeta.Name))
 	w.Write(data)
 }
 
@@ -125,15 +125,21 @@ func DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 func DeleteFileHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	filePath := r.Form.Get("file_hash")
-	fileMeta, ok := meta.GetFileMeta(filePath)
-	if !ok {
+	fileMeta, err := entity.GetFileMetaBySha1(filePath)
+	if err != nil {
 		// todo 处理not found
 		w.WriteHeader(http.StatusInternalServerError)
+		io.WriteString(w, fmt.Sprintf("GetFileMetaBySha1 fail, err: %v", err))
 		return
 	}
 
-	meta.DelFileMeta(fileMeta.FileSha1)
-	err := os.Remove(fileMeta.Location)
+	err = entity.PhysicalDelFileMeta(fileMeta.Sha1)
+	if err != nil {
+		io.WriteString(w, fmt.Sprintf("LogicalDelFileMeta fail, err: %v", err))
+		return
+	}
+	// todo 目前都是物理删除，最好找时间处理一下逻辑删除和物理删除
+	err = os.Remove(fileMeta.Location)
 	if err != nil {
 		io.WriteString(w, fmt.Sprintf("delete file fail, err: %v", err))
 		return
