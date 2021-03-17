@@ -11,3 +11,17 @@ CREATE TABLE `file_meta`
     PRIMARY KEY (`id`),
     UNIQUE KEY `uni_sha1` (`sha1`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `user`
+(
+    `id`           int(11) NOT NULL AUTO_INCREMENT COMMENT '用户id，主键',
+    `name`         varchar(256) NOT NULL COMMENT '用户名',
+    `pwd`          varchar(256) NOT NULL COMMENT '加密后的密码',
+    `email`        varchar(64)  NOT NULL COMMENT '邮箱',
+    `phone`        varchar(20)  NOT NULL COMMENT '手机号',
+    `created_time` datetime DEFAULT NOW() COMMENT '文件上传时间',
+    `last_active`  datetime DEFAULT NOW() COMMENT '上次登陆时间',
+    `status`       tinyint(8) NOT NULL DEFAULT 0 COMMENT '账户状态',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uni_phone` (`phone`)
+) ENGINE=INNODB DEFAULT CHARSET=utf8;

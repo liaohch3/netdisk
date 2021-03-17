@@ -38,6 +38,6 @@ func PhysicalDelFileMeta(sha1 string) error {
 // todo 定义errcode
 func GetFileMetaBySha1(sha1 string) (*FileMeta, error) {
 	meta := &FileMeta{}
-	err := GetDB().Model(FileMeta{}).Where("sha1 = ?", sha1).First(&meta).Error
+	err := GetDB().Model(FileMeta{}).Where("sha1 = ?", sha1).First(meta).Error
 	return meta, err
 }
