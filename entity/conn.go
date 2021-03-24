@@ -12,7 +12,7 @@ var db *gorm.DB
 func InitOrm() {
 	// todo 数据库连接配置化
 	var err error
-	db, err = gorm.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/file?charset=utf8&parseTime=True&loc=Local")
+	db, err = gorm.Open("mysql", "root:123456@tcp(127.0.0.1:3329)/file?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic(err)
 	}

@@ -25,3 +25,15 @@ CREATE TABLE `user`
     PRIMARY KEY (`id`),
     UNIQUE KEY `uni_phone` (`phone`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `user_file`
+(
+    `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'id，主键',
+    `user_id` int(11) NOT NULL COMMENT '用户id',
+    `file_id` int(11) NOT NULL COMMENT '文件id',
+    `created_time` datetime DEFAULT NOW() COMMENT '文件上传时间',
+    `updated_time` datetime DEFAULT NOW() COMMENT '文件更新时间',
+    `delete_flag`  tinyint(8) NOT NULL DEFAULT 0 COMMENT '删除标志',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uni_user_id_file_id` (`user_id`, `file_id`)
+) ENGINE=INNODB DEFAULT CHARSET=utf8;

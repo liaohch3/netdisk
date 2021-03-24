@@ -13,23 +13,27 @@ type FileMeta struct {
 	UpdatedTime time.Time `json:"updated_time"`
 }
 
-func (meta FileMeta) TableName() string {
+func (meta *FileMeta) TableName() string {
 	return "file_meta"
 }
 
+func (meta *FileMeta) Save() error {
+	return GetDB().Model(&FileMeta{}).Save(meta).Error
+}
+
 func CreateFileMeta(meta *FileMeta) error {
-	return GetDB().Model(FileMeta{}).Create(meta).Error
+	return GetDB().Model(&FileMeta{}).Create(meta).Error
 }
 
 func LogicalDelFileMeta(sha1 string) error {
-	return GetDB().Model(FileMeta{}).Where("sha1 = ?", sha1).UpdateColumns(map[string]interface{}{
+	return GetDB().Model(&FileMeta{}).Where("sha1 = ?", sha1).UpdateColumns(map[string]interface{}{
 		"delete_flag": DeleteFlag_Logical_Del,
 		// todo 逻辑删除应该不更新更新时间吧。。
 	}).Error
 }
 
 func PhysicalDelFileMeta(sha1 string) error {
-	return GetDB().Model(FileMeta{}).Where("sha1 = ?", sha1).UpdateColumns(map[string]interface{}{
+	return GetDB().Model(&FileMeta{}).Where("sha1 = ?", sha1).UpdateColumns(map[string]interface{}{
 		"delete_flag":  DeleteFlag_Physical_Del,
 		"updated_time": time.Now(),
 	}).Error
@@ -38,6 +42,12 @@ func PhysicalDelFileMeta(sha1 string) error {
 // todo 定义errcode
 func GetFileMetaBySha1(sha1 string) (*FileMeta, error) {
 	meta := &FileMeta{}
-	err := GetDB().Model(FileMeta{}).Where("sha1 = ?", sha1).First(meta).Error
+	err := GetDB().Model(&FileMeta{}).Where("sha1 = ?", sha1).First(meta).Error
+	return meta, err
+}
+
+func GetFileMetaByFileId(id int64) (*FileMeta, error) {
+	meta := &FileMeta{}
+	err := GetDB().Model(&FileMeta{}).Where("id = ?", id).First(meta).Error
 	return meta, err
 }

@@ -8,8 +8,10 @@ import (
 	"net/http"
 	"netdisk/entity"
 	"netdisk/model"
+	"netdisk/service"
 	"netdisk/utils"
 	"os"
+	"time"
 )
 
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
@@ -22,6 +24,8 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		io.WriteString(w, string(data))
 	} else if r.Method == "POST" {
+		r.ParseForm()
+		userName := r.Form.Get("username")
 		file, header, err := r.FormFile("file")
 		if err != nil {
 			io.WriteString(w, fmt.Sprintf("got form file fail, err: %v", err))
@@ -51,19 +55,25 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// 更新文件meta信息
 		newFile.Seek(0, 0)
 		sha1 := utils.FileSha1(newFile)
-		err = model.CreateFileMeta(sha1, header.Filename, size, location)
-		if err != nil {
-			io.WriteString(w, fmt.Sprintf("CreateFileMeta fail, err: %v", err))
-			// todo 这里失败最好可以起一个协程删掉文件
-			return
-		}
+		fileMeta := model.NewFileMeta(sha1, header.Filename, size, location)
 		fmt.Println(sha1)
 
+		err = service.CreateFileMetaAndBindUserFile(fileMeta, userName)
+		if err != nil {
+			io.WriteString(w, fmt.Sprintf("CreateFileMetaAndBindUserFile fail, err: %v", err))
+			return
+		}
+
+		err = fileMeta.Save()
+		if err != nil {
+			io.WriteString(w, fmt.Sprintf("fileMeta.Save() fail, err: %v", err))
+			return
+		}
+
 		// 重定向到上传成功页面
-		http.Redirect(w, r, "/file/upload/suc", http.StatusFound)
+		http.Redirect(w, r, "/static/view/home.html", http.StatusFound)
 	}
 }
 
@@ -145,4 +155,68 @@ func DeleteFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func QueryFileHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	name := r.Form.Get("username")
+	user, err := entity.GetUserByName(name)
+	if err != nil {
+		io.WriteString(w, fmt.Sprintf("GetUserByName fail, err: %v", err))
+		return
+	}
+	userFiles, err := entity.GetUserFileByUserId(user.Id)
+	if err != nil {
+		io.WriteString(w, fmt.Sprintf("GetUserFileByUserId fail, err: %v", err))
+		return
+	}
+	files := []*entity.FileMeta{}
+	for _, userFile := range userFiles {
+		file, err := entity.GetFileMetaByFileId(userFile.Id)
+		if err != nil {
+			io.WriteString(w, fmt.Sprintf("GetFileMetaByFileId fail, err: %v", err))
+			return
+		}
+		files = append(files, file)
+	}
+
+	resp := utils.NewSuccessMsg(files)
+	w.Write(resp.JsonByte())
+}
+
+// todo 处理所有返回值
+func TryFastUploadHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	name := r.Form.Get("username")
+	hash := r.Form.Get("file_hash")
+
+	fileMeta, err := entity.GetFileMetaBySha1(hash)
+	// 还需要更准确地判断成notFound才行
+	if err != nil {
+		w.Write(utils.NewRespMsg(-1, "Not Uploaded", nil).JsonByte())
+		return
+	}
+
+	user, err := entity.GetUserByName(name)
+	if err != nil {
+		io.WriteString(w, fmt.Sprintf("GetUserByName fail, err: %v", err))
+		return
+	}
+
+	userFile := &entity.UserFile{
+		Id:          utils.GenId(),
+		UserId:      user.Id,
+		FileId:      fileMeta.Id,
+		DeleteFlag:  entity.DeleteFlag_Default,
+		CreatedTime: time.Now(),
+		UpdatedTime: time.Now(),
+	}
+	err = entity.CreateUserFile(userFile)
+	if err != nil {
+		io.WriteString(w, fmt.Sprintf("CreateUserFile fail, err: %v", err))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(utils.NewSuccessMsg(nil).JsonByte())
 }
