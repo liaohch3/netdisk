@@ -11,8 +11,8 @@ func AuthHandler(handlerFunc http.HandlerFunc) http.HandlerFunc {
 			request.ParseForm()
 			name := request.Form.Get("username")
 			session := request.Form.Get("token")
-			realSession, ok := cache.GetSession(name)
-			if !ok || session != realSession {
+			realSession, err := cache.GetSession(name)
+			if err != nil || session != realSession {
 				writer.WriteHeader(http.StatusForbidden)
 				return
 			}

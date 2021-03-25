@@ -31,13 +31,14 @@ func main() {
 	http.HandleFunc("/user/signin", handler.SignInHandler)
 	http.HandleFunc("/user/info", middleware.AuthHandler(handler.UserInfoHandler))
 
-	err := http.ListenAndServe(":8081", nil)
+	err := http.ListenAndServe(":13081", nil)
 	if err != nil {
-		panic(fmt.Sprint("server start err: %v", err))
+		panic(fmt.Sprintf("server start err: %v", err))
 	}
 }
 
 func initial() {
 	entity.InitOrm()
 	cache.InitSessionMap()
+	cache.InitCache()
 }

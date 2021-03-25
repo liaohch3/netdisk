@@ -89,8 +89,8 @@ func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
 	// todo 这些操作应该放在网关里
 	name := r.Form.Get("username")
 	session := r.Form.Get("token")
-	realSession, ok := cache.GetSession(name)
-	if !ok || session != realSession {
+	realSession, err := cache.GetSession(name)
+	if err != nil || session != realSession {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}

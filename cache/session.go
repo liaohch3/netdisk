@@ -7,10 +7,12 @@ func InitSessionMap() {
 }
 
 func UpdateSessionMap(name, session string) {
-	sessionMap[name] = session
+	//sessionMap[name] = session
+	client.Set(name, session, 0)
 }
 
-func GetSession(name string) (string, bool) {
-	session, ok := sessionMap[name]
-	return session, ok
+func GetSession(name string) (string, error) {
+	//session, ok := sessionMap[name]
+	//return session, ok
+	return client.Get(name).Result()
 }
