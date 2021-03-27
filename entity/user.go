@@ -6,8 +6,6 @@ type User struct {
 	Id          int64     `json:"id"`
 	Name        string    `json:"name"`
 	Pwd         string    `json:"pwd"`
-	Email       string    `json:"email"`
-	Phone       string    `json:"phone"`
 	UserStatus  int8      `json:"status" gorm:"column:status"`
 	CreatedTime time.Time `json:"created_time"`
 	LastActive  time.Time `json:"last_active"`

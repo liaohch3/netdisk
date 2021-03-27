@@ -8,13 +8,11 @@ import (
 	"time"
 )
 
-func CreateUser(name, passwd, phone, email string) error {
+func CreateUser(name, passwd string) error {
 	user := &entity.User{
 		Id:          utils.GenId(),
 		Name:        name,
 		Pwd:         passwd, // todo 加密
-		Email:       email,
-		Phone:       phone,
 		UserStatus:  entity.UserStatus_Default,
 		CreatedTime: time.Now(),
 		LastActive:  time.Now(),

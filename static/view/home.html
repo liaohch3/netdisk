@@ -82,9 +82,8 @@
                 }
             },
             success: function (body, textStatus, jqXHR) {
-                var resp = JSON.parse(body);
-                document.getElementById("username").innerHTML = resp.data.username;
-                document.getElementById("regtime").innerHTML = resp.data.created_time;
+                document.getElementById("username").innerHTML = body.data.name;
+                document.getElementById("regtime").innerHTML = body.data.created_time;
                 updateFileList();
             }
         });
@@ -108,12 +107,8 @@
                 if (!body) {
                     return;
                 }
-                var resp = JSON.parse(body);
-                if (!resp || resp.length <= 0) {
-                    return;
-                }
 
-                var data = resp.data;
+                var data = body.data;
 
                 for (var i = 0; i < data.length; i++) {
                     var x = document.getElementById('filetbl').insertRow();
@@ -152,6 +147,7 @@
             data: {
                 "file_hash": sha1
             },
+            responseType: 'blob',
             error: function (jqXHR, textStatus, errorThrown) {
                 if (textStatus == "error") {
                     alert(textStatus + " : " + errorThrown);
@@ -161,11 +157,7 @@
             },
             success: function (body, textStatus, jqXHR) {
                 try {
-                    alert("文件即将下载自: " + body);
-                    var elemIF = document.createElement("iframe");
-                    elemIF.src = body;
-                    elemIF.style.display = "none";
-                    document.body.appendChild(elemIF);
+
                 } catch (e) {
                     alert(e);
                 }
