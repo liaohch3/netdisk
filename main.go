@@ -6,6 +6,7 @@ import (
 	"netdisk/cache"
 	"netdisk/entity"
 	"netdisk/handler"
+	"netdisk/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,7 +14,6 @@ import (
 // todo 改为gin框架
 func main() {
 	initial()
-
 	router := gin.Default()
 
 	// 静态资源处理
@@ -22,6 +22,7 @@ func main() {
 
 	file := router.Group("/file")
 	{
+		file.Use(middleware.AuthHandler())
 		// todo 中间件配置化
 		file.GET("/upload", handler.UploadHandler)
 		file.POST("/upload", handler.DoUploadHandler)
@@ -39,6 +40,8 @@ func main() {
 		user.POST("/signup", handler.DoSignUpHandler)
 		user.GET("/signin", handler.SignInHandler)
 		user.POST("/signin", handler.DoSignInHandler)
+
+		user.Use(middleware.AuthHandler())
 		user.POST("/info", handler.UserInfoHandler)
 	}
 
@@ -50,6 +53,5 @@ func main() {
 
 func initial() {
 	entity.InitOrm()
-	cache.InitSessionMap()
 	cache.InitCache()
 }

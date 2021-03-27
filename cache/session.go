@@ -1,18 +1,11 @@
 package cache
 
-var sessionMap map[string]string
+import "time"
 
-func InitSessionMap() {
-	sessionMap = make(map[string]string)
+func UpdateSessionMap(session string, userID int64, maxAge time.Duration) error {
+	return client.Set(session, userID, maxAge).Err()
 }
 
-func UpdateSessionMap(name, session string) {
-	//sessionMap[name] = session
-	client.Set(name, session, 0)
-}
-
-func GetSession(name string) (string, error) {
-	//session, ok := sessionMap[name]
-	//return session, ok
-	return client.Get(name).Result()
+func GetUserIDFromSession(session string) (int64, error) {
+	return client.Get(session).Int64()
 }

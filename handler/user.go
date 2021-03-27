@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"net/http"
 	"netdisk/cache"
+	"netdisk/consts"
 	"netdisk/entity"
 	"netdisk/model"
 	"netdisk/utils"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -54,27 +56,25 @@ func DoSignInHandler(c *gin.Context) {
 
 	// 2. 生成session
 	session := utils.GenSession(name)
-	cache.UpdateSessionMap(name, session)
+	err = cache.UpdateSessionMap(session, user.Id, 30*24*60*60*time.Second)
+	if err != nil {
+		c.String(-1, "UpdateSessionMap fail, err: %v", err)
+		return
+	}
 
+	c.SetCookie("session", session, 30*24*60*60, "/", "localhost", false, false)
 	// 3. 重定向到首页
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"location": "/static/view/home.html",
 		"username": name,
-		"token":    session,
 	})
 }
 
 func UserInfoHandler(c *gin.Context) {
 	// todo 这些操作应该放在网关里
-	name := c.Query("username")
-	session := c.Query("token")
-	realSession, err := cache.GetSession(name)
-	if err != nil || session != realSession {
-		c.String(http.StatusForbidden, "")
-		return
-	}
+	userID := c.GetInt64(consts.USER_ID)
 
-	user, err := entity.GetUserByName(name)
+	user, err := entity.GetUserByUserID(userID)
 	if err != nil {
 		c.String(-1, "GetUserByName fail, err: %v", err)
 		return

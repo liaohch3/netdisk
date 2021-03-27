@@ -21,6 +21,12 @@ func CreateUser(user *User) error {
 
 func GetUserByName(name string) (*User, error) {
 	user := &User{}
-	err := GetDB().Model(User{}).Where("name = ?", name).First(user).Error
+	err := GetDB().Model(&User{}).Where("name = ?", name).First(user).Error
+	return user, err
+}
+
+func GetUserByUserID(userID int64) (*User, error) {
+	user := &User{}
+	err := GetDB().Model(&User{}).Where("id = ?", userID).First(user).Error
 	return user, err
 }

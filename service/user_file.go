@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-func CreateFileMetaAndBindUserFile(fileMeta *entity.FileMeta, userName string) error {
-	user, err := entity.GetUserByName(userName)
+func CreateFileMetaAndBindUserFile(fileMeta *entity.FileMeta, userID int64) error {
+	user, err := entity.GetUserByUserID(userID)
 	if err != nil {
 		return err
 	}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"netdisk/consts"
 	"netdisk/entity"
 	"netdisk/model"
 	"netdisk/service"
@@ -21,7 +22,7 @@ func UploadHandler(c *gin.Context) {
 }
 
 func DoUploadHandler(c *gin.Context) {
-	userName := c.Query("username")
+	userID := c.GetInt64(consts.USER_ID)
 	header, err := c.FormFile("file")
 	if err != nil {
 		c.String(-1, "got form file fail, err: %v", err)
@@ -54,7 +55,7 @@ func DoUploadHandler(c *gin.Context) {
 	fileMeta := model.NewFileMeta(sha1, header.Filename, header.Size, location)
 	fmt.Println(sha1)
 
-	err = service.CreateFileMetaAndBindUserFile(fileMeta, userName)
+	err = service.CreateFileMetaAndBindUserFile(fileMeta, userID)
 	if err != nil {
 		c.String(-1, "CreateFileMetaAndBindUserFile fail, err: %v", err)
 		return
@@ -147,8 +148,8 @@ func DeleteFileHandler(c *gin.Context) {
 
 //todo 规范所有的c.String 换成c.JSON好一点
 func QueryFileHandler(c *gin.Context) {
-	name := c.Query("username")
-	user, err := entity.GetUserByName(name)
+	userID := c.GetInt64(consts.USER_ID)
+	user, err := entity.GetUserByUserID(userID)
 	if err != nil {
 		c.String(-1, "GetUserByName fail, err: %v", err)
 		return
@@ -174,7 +175,7 @@ func QueryFileHandler(c *gin.Context) {
 
 // todo 处理所有返回值
 func TryFastUploadHandler(c *gin.Context) {
-	name := c.Query("username")
+	userID := c.GetInt64(consts.USER_ID)
 	hash := c.Query("file_hash")
 
 	fileMeta, err := entity.GetFileMetaBySha1(hash)
@@ -184,7 +185,7 @@ func TryFastUploadHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := entity.GetUserByName(name)
+	user, err := entity.GetUserByUserID(userID)
 	if err != nil {
 		c.String(-1, "GetUserByName fail, err: %v", err)
 		return

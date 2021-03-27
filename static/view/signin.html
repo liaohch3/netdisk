@@ -84,8 +84,6 @@
                 }
             },
             success: function (body, textStatus, jqXHR) {
-                localStorage.setItem("token", body.token)
-                localStorage.setItem("username", body.username)
                 window.location.href = body.location;
             }
         });
