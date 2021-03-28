@@ -28,7 +28,7 @@ func main() {
 		file.POST("/upload", handler.DoUploadHandler)
 		file.GET("/upload/suc", handler.UploadSucPage)
 		file.GET("/meta", handler.GetFileMeta)
-		file.POST("/download", handler.DownloadFileHandler)
+		file.GET("/download", handler.DownloadFileHandler)
 		file.POST("/delete", handler.DeleteFileHandler)
 		file.POST("/query", handler.QueryFileHandler)
 		file.POST("/fastupload", handler.TryFastUploadHandler)
