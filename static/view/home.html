@@ -140,28 +140,15 @@
     }
 
     function downloadFile(sha1) {
-        $.ajax({
-            url: "/file/download?",
-            type: "POST",
-            data: {
-                "file_hash": sha1
-            },
-            responseType: 'blob',
-            error: function (jqXHR, textStatus, errorThrown) {
-                if (textStatus == "error") {
-                    alert(textStatus + " : " + errorThrown);
-                } else {
-                    alert(textStatus);
-                }
-            },
-            success: function (body, textStatus, jqXHR) {
-                try {
-
-                } catch (e) {
-                    alert(e);
-                }
-            }
-        });
+        try {
+            var url = "/file/download?file_hash=" + sha1;
+            var elemIF = document.createElement("iframe");
+            elemIF.src = url;
+            elemIF.style.display = "none";
+            document.body.appendChild(elemIF);
+        } catch (e) {
+            alert("下载异常！");
+        }
     }
 </script>
 

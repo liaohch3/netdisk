@@ -95,7 +95,7 @@ func GetFileMeta(c *gin.Context) {
 }
 
 func DownloadFileHandler(c *gin.Context) {
-	filePath := c.PostForm("file_hash")
+	filePath := c.Query("file_hash")
 	fileMeta, err := entity.GetFileMetaBySha1(filePath)
 	if err != nil {
 		// todo 处理not found
