@@ -21,3 +21,5 @@ message SignUpReq {
 message SignUpResp {
   BaseResp Resp = 1;
 }
+
+option go_package = "user/proto";

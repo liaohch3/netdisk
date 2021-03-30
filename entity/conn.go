@@ -16,6 +16,9 @@ func InitOrm() {
 	if err != nil {
 		panic(err)
 	}
+	if db == nil {
+		panic("db init fail")
+	}
 }
 
 func GetDB() *gorm.DB {
