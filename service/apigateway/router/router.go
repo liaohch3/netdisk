@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"netdisk/middleware"
 	"netdisk/service/apigateway/handler"
 
 	"github.com/gin-gonic/gin"
@@ -18,6 +19,11 @@ func Router() *gin.Engine {
 	{
 		user.GET("/signup", handler.SignUpHandler)
 		user.POST("/signup", handler.DoSignUpHandler)
+		user.GET("/signin", handler.SignInHandler)
+		user.POST("/signin", handler.DoSignInHandler)
+
+		user.Use(middleware.AuthHandler())
+		user.POST("/info", handler.UserInfoHandler)
 	}
 	return router
 }

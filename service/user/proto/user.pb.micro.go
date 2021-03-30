@@ -5,16 +5,14 @@ package proto
 
 import (
 	fmt "fmt"
-	math "math"
-
 	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
+import (
 	context "context"
-
 	api "github.com/micro/go-micro/v2/api"
-
 	client "github.com/micro/go-micro/v2/client"
-
 	server "github.com/micro/go-micro/v2/server"
 )
 
@@ -45,6 +43,8 @@ func NewUserServiceEndpoints() []*api.Endpoint {
 
 type UserService interface {
 	SignUp(ctx context.Context, in *SignUpReq, opts ...client.CallOption) (*SignUpResp, error)
+	SignIn(ctx context.Context, in *SignInReq, opts ...client.CallOption) (*SignInResp, error)
+	GetUserInfo(ctx context.Context, in *GetUserInfoReq, opts ...client.CallOption) (*GetUserInfoResp, error)
 }
 
 type userService struct {
@@ -69,15 +69,39 @@ func (c *userService) SignUp(ctx context.Context, in *SignUpReq, opts ...client.
 	return out, nil
 }
 
+func (c *userService) SignIn(ctx context.Context, in *SignInReq, opts ...client.CallOption) (*SignInResp, error) {
+	req := c.c.NewRequest(c.name, "UserService.SignIn", in)
+	out := new(SignInResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userService) GetUserInfo(ctx context.Context, in *GetUserInfoReq, opts ...client.CallOption) (*GetUserInfoResp, error) {
+	req := c.c.NewRequest(c.name, "UserService.GetUserInfo", in)
+	out := new(GetUserInfoResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for UserService service
 
 type UserServiceHandler interface {
 	SignUp(context.Context, *SignUpReq, *SignUpResp) error
+	SignIn(context.Context, *SignInReq, *SignInResp) error
+	GetUserInfo(context.Context, *GetUserInfoReq, *GetUserInfoResp) error
 }
 
 func RegisterUserServiceHandler(s server.Server, hdlr UserServiceHandler, opts ...server.HandlerOption) error {
 	type userService interface {
 		SignUp(ctx context.Context, in *SignUpReq, out *SignUpResp) error
+		SignIn(ctx context.Context, in *SignInReq, out *SignInResp) error
+		GetUserInfo(ctx context.Context, in *GetUserInfoReq, out *GetUserInfoResp) error
 	}
 	type UserService struct {
 		userService
@@ -92,4 +116,12 @@ type userServiceHandler struct {
 
 func (h *userServiceHandler) SignUp(ctx context.Context, in *SignUpReq, out *SignUpResp) error {
 	return h.UserServiceHandler.SignUp(ctx, in, out)
+}
+
+func (h *userServiceHandler) SignIn(ctx context.Context, in *SignInReq, out *SignInResp) error {
+	return h.UserServiceHandler.SignIn(ctx, in, out)
+}
+
+func (h *userServiceHandler) GetUserInfo(ctx context.Context, in *GetUserInfoReq, out *GetUserInfoResp) error {
+	return h.UserServiceHandler.GetUserInfo(ctx, in, out)
 }

@@ -2,9 +2,8 @@ syntax = "proto3";
 
 package proto;
 
-service UserService {
-  rpc SignUp(SignUpReq) returns (SignUpResp) {}
-//  rpc SignIn(SignInReq) returns (SignInResp) {}
+message Base {
+
 }
 
 message BaseResp {
@@ -12,14 +11,49 @@ message BaseResp {
   string StatusMessage = 2;
 }
 
+message User {
+  int64 ID = 1;
+  string Name = 2;
+  int32 Status = 3;
+}
 
 message SignUpReq {
   string UserName = 1;
   string Password = 2;
+  Base Base = 255;
 }
 
 message SignUpResp {
-  BaseResp Resp = 1;
+  BaseResp Resp = 255;
+}
+
+message SignInReq {
+  string UserName = 1;
+  string Password = 2;
+  Base Base = 255;
+}
+
+message SignInResp {
+  string Location = 1;
+  string UserName = 2;
+  string Session = 3;
+  BaseResp Resp = 255;
+}
+
+message GetUserInfoReq {
+  int64 UserID = 1;
+  Base Base = 255;
+}
+
+message GetUserInfoResp {
+  User UserInfo = 1;
+  BaseResp Resp = 255;
+}
+
+service UserService {
+  rpc SignUp(SignUpReq) returns (SignUpResp) {}
+  rpc SignIn(SignInReq) returns (SignInResp) {}
+  rpc GetUserInfo(GetUserInfoReq) returns (GetUserInfoResp) {}
 }
 
 option go_package = "user/proto";

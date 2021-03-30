@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"netdisk/consts"
 	"netdisk/service/user/proto"
 
 	"github.com/micro/go-micro/v2"
@@ -51,9 +52,78 @@ func DoSignUpHandler(c *gin.Context) {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
+	if resp.Resp.GetStatusCode() != 0 {
+		fmt.Printf("code: %v, message: %v", resp.Resp.GetStatusCode(), resp.Resp.GetStatusMessage())
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"code":    resp.Resp.StatusCode,
-		"message": resp.Resp.StatusMessage,
+		"code":    resp.Resp.GetStatusCode(),
+		"message": resp.Resp.GetStatusMessage(),
+	})
+}
+
+func SignInHandler(c *gin.Context) {
+	// GET 请求时返回index页面
+	c.HTML(http.StatusOK, "signin.html", nil)
+}
+func DoSignInHandler(c *gin.Context) {
+	// 1. 校验用户名密码
+	// todo 这些操作应该放在网关里
+	name := c.PostForm("username")
+	passwd := c.PostForm("password")
+
+	ctx := context.Background()
+	resp, err := userCli.SignIn(ctx, &proto.SignInReq{
+		UserName: name,
+		Password: passwd,
+	})
+	if err != nil {
+		fmt.Printf("err: %v\n", err.Error())
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	if resp.Resp.GetStatusCode() != 0 {
+		fmt.Printf("code: %v, message: %v", resp.Resp.GetStatusCode(), resp.Resp.GetStatusMessage())
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	fmt.Printf("resp: %v", resp)
+
+	c.SetCookie("session", resp.Session, 30*24*60*60, "/", "localhost", false, false)
+	c.JSON(http.StatusOK, gin.H{
+		"code":    resp.Resp.GetStatusCode(),
+		"message": resp.Resp.GetStatusMessage(),
+		"data": map[string]interface{}{
+			"location": resp.Location,
+			"username": resp.UserName,
+		},
+	})
+}
+
+func UserInfoHandler(c *gin.Context) {
+	userID := c.GetInt64(consts.USER_ID)
+
+	ctx := context.Background()
+	resp, err := userCli.GetUserInfo(ctx, &proto.GetUserInfoReq{
+		UserID: userID,
+	})
+	if err != nil {
+		fmt.Printf("err: %v\n", err.Error())
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	if resp.Resp.GetStatusCode() != 0 {
+		fmt.Printf("code: %v, message: %v", resp.Resp.GetStatusCode(), resp.Resp.GetStatusMessage())
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"code":    resp.Resp.GetStatusCode(),
+		"message": resp.Resp.GetStatusMessage(),
+		"data": map[string]interface{}{
+			"user": resp.UserInfo,
+		},
 	})
 }

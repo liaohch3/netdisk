@@ -84,7 +84,14 @@
                 }
             },
             success: function (body, textStatus, jqXHR) {
-                window.location.href = body.location;
+                console.log(body);
+                if (body.code == 0) {
+                    // 成功后跳到home页
+                    console.log(body.data);
+                    window.location.href = body.data.location;
+                } else {
+                    alert('登录失败');
+                }
             }
         });
     }
