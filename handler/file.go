@@ -8,7 +8,6 @@ import (
 	"netdisk/consts"
 	"netdisk/entity"
 	"netdisk/model"
-	"netdisk/service"
 	"netdisk/utils"
 	"os"
 	"time"
@@ -55,7 +54,7 @@ func DoUploadHandler(c *gin.Context) {
 	fileMeta := model.NewFileMeta(sha1, header.Filename, header.Size, location)
 	fmt.Println(sha1)
 
-	err = service.CreateFileMetaAndBindUserFile(fileMeta, userID)
+	err = model.CreateFileMetaAndBindUserFile(fileMeta, userID)
 	if err != nil {
 		c.String(-1, "CreateFileMetaAndBindUserFile fail, err: %v", err)
 		return

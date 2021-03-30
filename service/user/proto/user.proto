@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package proto;
+
+service UserService {
+  rpc SignUp(SignUpReq) returns (SignUpResp) {}
+//  rpc SignIn(SignInReq) returns (SignInResp) {}
+}
+
+message BaseResp {
+  int32 StatusCode = 1;
+  string StatusMessage = 2;
+}
+
+
+message SignUpReq {
+  string UserName = 1;
+  string Password = 2;
+}
+
+message SignUpResp {
+  BaseResp Resp = 1;
+}
+
+option go_package = "user/proto";
